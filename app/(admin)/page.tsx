@@ -1,3 +1,183 @@
-import Link from 'next/link';
-import {allRows,Media,Profile,Vote,mediaColumns} from '@/lib/data';
-export default async function Overview(){const [media,people,votes]=await Promise.all([allRows<Media>('generations',mediaColumns),allRows<Profile>('profiles','id,first_name,last_name,is_superadmin,created_at'),allRows<Vote>('votes','id,generation_id,user_id,value,created_at')]);const up=votes.filter(v=>v.value===1).length;const approval=votes.length?Math.round(up/votes.length*100):0;const unreviewed=media.filter(m=>m.upvotes+m.downvotes===0);const divisive=media.filter(m=>m.upvotes&&m.downvotes).sort((a,b)=>Math.abs(a.upvotes-a.downvotes)/(a.upvotes+a.downvotes)-Math.abs(b.upvotes-b.downvotes)/(b.upvotes+b.downvotes));const best=[...media].sort((a,b)=>(b.upvotes-b.downvotes)-(a.upvotes-a.downvotes))[0];const days=Array.from({length:14},(_,i)=>{const d=new Date();d.setUTCDate(d.getUTCDate()-13+i);const key=d.toISOString().slice(0,10);return {key,label:d.toLocaleDateString('en-US',{month:'short',day:'numeric',timeZone:'UTC'}),count:votes.filter(v=>v.created_at.slice(0,10)===key).length}});const max=Math.max(1,...days.map(d=>d.count));return <><div className="page-title"><div><span className="eyebrow">THE BIG PICTURE</span><h1>Community pulse<span>.</span></h1><p>A closer look at the laughs, the creators, and everything in between.</p></div><Link className="primary" href="/media/new">+ Add media</Link></div><section className="stats">{[[media.length,'Published creations','Every caption, every photo'],[people.length,'Community members','Profiles in your database'],[votes.length,'Votes cast','Small reactions, big signals'],[approval+'%','Audience approval',votes.length?'Share of votes that are positive':'Waiting for the first vote']].map(([n,l,s])=><article key={l} className="stat"><span>{l}</span><strong>{n}</strong><small>{s}</small></article>)}</section><div className="dashboard-grid"><section className="card chart"><div className="section-title"><div><span className="eyebrow">ENGAGEMENT</span><h2>The daily reaction.</h2></div><span className="pill">Last 14 days</span></div><div className="bars">{days.map(d=><div className="bar-column" key={d.key} title={d.label+': '+d.count+' votes'}><span>{d.count||''}</span><div className="bar" style={{height:Math.max(3,d.count/max*150)}}/><small>{d.label}</small></div>)}</div><p className="caption">{days.reduce((a,d)=>a+d.count,0)} votes in the past 14 calendar days · UTC</p></section><section className="card lime"><span className="eyebrow">THE CROWD FAVORITE</span><div className="big-quote">“</div><h2>{best?.content||'The next big laugh is waiting.'}</h2><p>{best?`${best.upvotes} upvotes · ${best.downvotes} downvotes · ranked by net score`:'Publish a creation to start the conversation.'}</p>{best&&<Link href={'/media/'+best.id}>View creation ↗</Link>}</section><section className="card"><div className="section-title"><div><span className="eyebrow">TASTE TEST</span><h2>Which style lands?</h2></div></div>{['deadpan','chaotic','wholesome'].map(style=>{const items=media.filter(m=>m.style===style);const yes=items.reduce((a,m)=>a+m.upvotes,0);const total=items.reduce((a,m)=>a+m.upvotes+m.downvotes,0);return <div className="style-row" key={style}><div><b>{style}</b><span>{items.length} creations · {total} votes</span></div><div className="meter"><i style={{width:(total?yes/total*100:0)+'%'}}/></div><strong>{total?Math.round(yes/total*100)+'%':'—'}</strong></div>})}<p className="caption">Positive vote share. Small samples may swing quickly.</p></section><section className="card"><span className="eyebrow">WORTH A SECOND LOOK</span><h2>The conversation starters.</h2><div className="insight"><strong>{unreviewed.length}</strong><div><b>Still waiting for a verdict</b><p>Creations with no votes yet.</p><Link href="/media?filter=unrated">Explore overlooked media →</Link></div></div><div className="divider"/><b>Most divided reaction</b><p>{divisive[0]?.content||'No split votes yet. The jury agrees so far.'}</p>{divisive[0]&&<Link href={'/media/'+divisive[0].id}>{divisive[0].upvotes} up / {divisive[0].downvotes} down ↗</Link>}</section></div></>}
+import Link from "next/link";
+import { allRows, Media, Profile, Vote, mediaColumns } from "@/lib/data";
+export default async function Overview() {
+  const [media, people, votes] = await Promise.all([
+    allRows<Media>("generations", mediaColumns),
+    allRows<Profile>(
+      "profiles",
+      "id,first_name,last_name,is_superadmin,created_at",
+    ),
+    allRows<Vote>("votes", "id,generation_id,user_id,value,created_at"),
+  ]);
+  const up = votes.filter((v) => v.value === 1).length;
+  const approval = votes.length ? Math.round((up / votes.length) * 100) : 0;
+  const unreviewed = media.filter((m) => m.upvotes + m.downvotes === 0);
+  const divisive = media
+    .filter((m) => m.upvotes && m.downvotes)
+    .sort(
+      (a, b) =>
+        Math.abs(a.upvotes - a.downvotes) / (a.upvotes + a.downvotes) -
+        Math.abs(b.upvotes - b.downvotes) / (b.upvotes + b.downvotes),
+    );
+  const best = [...media].sort(
+    (a, b) => b.upvotes - b.downvotes - (a.upvotes - a.downvotes),
+  )[0];
+  const days = Array.from({ length: 14 }, (_, i) => {
+    const d = new Date();
+    d.setUTCDate(d.getUTCDate() - 13 + i);
+    const key = d.toISOString().slice(0, 10);
+    return {
+      key,
+      label: d.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        timeZone: "UTC",
+      }),
+      count: votes.filter((v) => v.created_at.slice(0, 10) === key).length,
+    };
+  });
+  const max = Math.max(1, ...days.map((d) => d.count));
+  return (
+    <>
+      <div className="page-title">
+        <div>
+          <span className="eyebrow">THE BIG PICTURE</span>
+          <h1>
+            Community pulse<span>.</span>
+          </h1>
+          <p>
+            A closer look at the laughs, the creators, and everything in
+            between.
+          </p>
+        </div>
+        <Link className="primary" href="/media/new">
+          + Add media
+        </Link>
+      </div>
+      <section className="stats">
+        {[
+          [media.length, "Published creations", "Every caption, every photo"],
+          [people.length, "Community members", "Profiles in your database"],
+          [votes.length, "Votes cast", "Small reactions, big signals"],
+          [
+            approval + "%",
+            "Audience approval",
+            votes.length
+              ? "Share of votes that are positive"
+              : "Waiting for the first vote",
+          ],
+        ].map(([n, l, s]) => (
+          <article key={l} className="stat">
+            <span>{l}</span>
+            <strong>{n}</strong>
+            <small>{s}</small>
+          </article>
+        ))}
+      </section>
+      <div className="dashboard-grid">
+        <section className="card chart">
+          <div className="section-title">
+            <div>
+              <span className="eyebrow">ENGAGEMENT</span>
+              <h2>The daily reaction.</h2>
+            </div>
+            <span className="pill">Last 14 days</span>
+          </div>
+          <div className="bars">
+            {days.map((d) => (
+              <div
+                className="bar-column"
+                key={d.key}
+                title={d.label + ": " + d.count + " votes"}
+              >
+                <span>{d.count || ""}</span>
+                <div
+                  className="bar"
+                  style={{ height: Math.max(3, (d.count / max) * 150) }}
+                />
+                <small>{d.label}</small>
+              </div>
+            ))}
+          </div>
+          <p className="caption">
+            {days.reduce((a, d) => a + d.count, 0)} votes in the past 14
+            calendar days · UTC
+          </p>
+        </section>
+        <section className="card lime">
+          <span className="eyebrow">THE CROWD FAVORITE</span>
+          <div className="big-quote">“</div>
+          <h2>{best?.content || "The next big laugh is waiting."}</h2>
+          <p>
+            {best
+              ? `${best.upvotes} upvotes · ${best.downvotes} downvotes · ranked by net score`
+              : "Publish a creation to start the conversation."}
+          </p>
+          {best && <Link href={"/media/" + best.id}>View creation ↗</Link>}
+        </section>
+        <section className="card">
+          <div className="section-title">
+            <div>
+              <span className="eyebrow">TASTE TEST</span>
+              <h2>Which style lands?</h2>
+            </div>
+          </div>
+          {["deadpan", "chaotic", "wholesome"].map((style) => {
+            const items = media.filter((m) => m.style === style);
+            const yes = items.reduce((a, m) => a + m.upvotes, 0);
+            const total = items.reduce(
+              (a, m) => a + m.upvotes + m.downvotes,
+              0,
+            );
+            return (
+              <div className="style-row" key={style}>
+                <div>
+                  <b>{style}</b>
+                  <span>
+                    {items.length} creations · {total} votes
+                  </span>
+                </div>
+                <div className="meter">
+                  <i
+                    style={{ width: (total ? (yes / total) * 100 : 0) + "%" }}
+                  />
+                </div>
+                <strong>
+                  {total ? Math.round((yes / total) * 100) + "%" : "—"}
+                </strong>
+              </div>
+            );
+          })}
+          <p className="caption">
+            Positive vote share. Small samples may swing quickly.
+          </p>
+        </section>
+        <section className="card">
+          <span className="eyebrow">WORTH A SECOND LOOK</span>
+          <h2>The conversation starters.</h2>
+          <div className="insight">
+            <strong>{unreviewed.length}</strong>
+            <div>
+              <b>Still waiting for a verdict</b>
+              <p>Creations with no votes yet.</p>
+              <Link href="/media?filter=unrated">
+                Explore overlooked media →
+              </Link>
+            </div>
+          </div>
+          <div className="divider" />
+          <b>Most divided reaction</b>
+          <p>
+            {divisive[0]?.content ||
+              "No split votes yet. The jury agrees so far."}
+          </p>
+          {divisive[0] && (
+            <Link href={"/media/" + divisive[0].id}>
+              {divisive[0].upvotes} up / {divisive[0].downvotes} down ↗
+            </Link>
+          )}
+        </section>
+      </div>
+    </>
+  );
+}

@@ -1,2 +1,45 @@
-import Link from 'next/link';import {notFound} from 'next/navigation';import {requireAdmin} from '@/lib/auth';import {MediaForm} from '@/components/media-form';import {mediaColumns,date} from '@/lib/data';
-export default async function Edit({params}:{params:Promise<{id:string}>}){const {db}=await requireAdmin();const {id}=await params;if(!/^[1-9]\d*$/.test(id))notFound();const {data,error}=await db.from('generations').select(mediaColumns).eq('id',id).single();if(error||!data)notFound();return <><Link href="/media">← Media library</Link><div className="page-title"><div><span className="eyebrow">CREATION #{data.id}</span><h1>In the details<span>.</span></h1><p>{date(data.created_at)} · ↑ {data.upvotes} / ↓ {data.downvotes}</p></div></div>{data.image_url&&<img className="detail-image" src={data.image_url} alt={data.image_alt||'Media preview'} referrerPolicy="no-referrer"/>}<MediaForm media={data}/></>}
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { requireAdmin } from "@/lib/auth";
+import { MediaForm } from "@/components/media-form";
+import { mediaColumns, date } from "@/lib/data";
+export default async function Edit({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { db } = await requireAdmin();
+  const { id } = await params;
+  if (!/^[1-9]\d*$/.test(id)) notFound();
+  const { data, error } = await db
+    .from("generations")
+    .select(mediaColumns)
+    .eq("id", id)
+    .single();
+  if (error || !data) notFound();
+  return (
+    <>
+      <Link href="/media">← Media library</Link>
+      <div className="page-title">
+        <div>
+          <span className="eyebrow">CREATION #{data.id}</span>
+          <h1>
+            In the details<span>.</span>
+          </h1>
+          <p>
+            {date(data.created_at)} · ↑ {data.upvotes} / ↓ {data.downvotes}
+          </p>
+        </div>
+      </div>
+      {data.image_url && (
+        <img
+          className="detail-image"
+          src={data.image_url}
+          alt={data.image_alt || "Media preview"}
+          referrerPolicy="no-referrer"
+        />
+      )}
+      <MediaForm media={data} />
+    </>
+  );
+}
