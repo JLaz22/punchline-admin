@@ -837,3 +837,5 @@ td {
     grid-template-columns: repeat(2, 1fr);
   }
 }
+
+@media(min-width:701px){ aside{overflow-y:auto} .workspace{margin-bottom:20px} nav{gap:3px} nav a{padding:9px 12px} .sidebar-bottom{padding-top:24px} }

@@ -36,3 +36,9 @@ The admin adds existing AI-generated content and edits its metadata; AI generati
 ## Validation
 
 `npm run build` validates TypeScript and production routes. `npm audit` checks dependencies. Verify signed-out direct URLs redirect to login, non-admin Google sessions are denied, and approved admins can manage media. Run the transaction-based database security tests to verify RLS and self-promotion prevention without retaining test records.
+
+## Week 7 observability
+
+Apply `supabase/migrations/20261108000000_observability.sql` after the existing admin migration, before deploying the updated public app. It adds superadmin-only management tables, generation telemetry, chain output, and image asset management. `/manage/*` pages expose the operations specified in the rubric; prompt chains and steps are read-only here, while mix weights are editable. Linked model/provider deletion is restricted to protect workflows. Signup lists are managed as data; configure an Auth hook separately if signup enforcement is desired.
+
+The public app records requests and model responses, including failure status and latency. Image assets accept signature-checked JPEG/PNG/WebP files up to 3 MB. Apply the migration once; it intentionally fails rather than silently accepting an incompatible pre-existing table.

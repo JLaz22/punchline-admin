@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { resources } from "@/lib/resources";
 import { requireAdmin } from "@/lib/auth";
 export const dynamic = "force-dynamic";
 export default async function AdminLayout({
@@ -27,7 +28,9 @@ export default async function AdminLayout({
           <Link href="/ratings">
             ↗ <span>Ratings</span>
           </Link>
-        </nav>
+        <Link href="/images">▧ <span>Images</span></Link>
+{Object.entries(resources).map(([key,r])=><Link key={key} href={`/manage/${key}`}><span>{r.title}</span></Link>)}
+</nav>
         <div className="sidebar-bottom">
           <a
             href="https://humor-project-eta.vercel.app"
